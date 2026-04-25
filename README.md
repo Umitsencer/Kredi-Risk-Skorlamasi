@@ -11,7 +11,17 @@ Bu proje, finansal kurumlarda (bankalar, kredi kuruluşları) kredi başvuru sü
 **Problem:** Geleneksel kredi değerlendirme süreçleri yavaş, maliyetli ve insan hatasına açıktır. Yanlış kişilere kredi verilmesi (False Positives) bankalar için ciddi maddi kayıplara, ödeme gücü olan kişilerin reddedilmesi (False Negatives) ise müşteri kaybına yol açar.
 **Çözüm:** Geçmiş verilerden öğrenen bir Karar Destek Sistemi (Decision Support System) kurarak, yeni başvuruları milisaniyeler içinde objektif metriklerle değerlendirmek.
 
-## 📊 Veri Seti Yapısı (Sentetik Veri)
+## 🏗️ Sistem Mimarisi (Data Pipeline)
+```mermaid
+graph TD
+    A[Banka Veritabanı / Müşteri Logları] --> B(Veri Ön İşleme & Normalizasyon)
+    B --> C{Random Forest Sınıflandırıcı}
+    C -->|Tahmin Doğruluğu %96.5| D[Kredi Karar Motoru]
+    D --> E[✅ Kredi Onaylandı]
+    D --> F[❌ Kredi Reddedildi]
+```
+
+## 📊 Veri Seti Yapısı
 Projede KVKK gereksinimleri gözetilerek, gerçek dünya dağılımlarına uygun sentetik veriler (1000 örnek) kullanılmıştır.
 *   `Yas` (18-70): Müşterinin yaşı.
 *   `Aylik_Gelir` (15k-150k TL): Beyan edilen aylık net gelir.
@@ -20,21 +30,14 @@ Projede KVKK gereksinimleri gözetilerek, gerçek dünya dağılımlarına uygun
 *   `Kredi_Onay` (Hedef Değişken): 1 (Onaylandı) / 0 (Reddedildi).
 
 ## 🧠 Metodoloji ve Modelleme
-1.  **Veri Üretimi ve Ön İşleme:** Kurallar bazlı sentetik veri üretimi (Örn: Talep edilen kredi, gelirin 20 katından fazlaysa doğrudan red).
+1.  **Veri Üretimi ve Ön İşleme:** Kurallar bazlı sentetik veri üretimi.
 2.  **Veri Ayrımı:** %80 Eğitim (Train), %20 Test seti.
-3.  **Model Seçimi:** Doğrusal olmayan ilişkileri iyi yakalayabilen ve aşırı öğrenmeye (overfitting) karşı dirençli olan **Random Forest Classifier** (100 ağaç).
-4.  **Değerlendirme:** Dengesiz veri setlerinde Accuracy (Doğruluk) yanıltıcı olabileceğinden Precision, Recall ve F1-Score metriklerine odaklanılmıştır.
+3.  **Model Seçimi:** Doğrusal olmayan ilişkileri iyi yakalayabilen **Random Forest Classifier** (100 ağaç).
+4.  **Değerlendirme:** Precision, Recall ve F1-Score metriklerine odaklanılmıştır.
 
 ## 📈 Model Performansı ve Örnek Çıktı
 
-Sistemin test verisi üzerindeki performansı ve yeni bir müşteriyi değerlendirme simülasyonu aşağıdadır:
-
 ```text
-[1/4] Sentetik Müşteri Verisi Üretiliyor...
-[2/4] Veri Eğitim (Train) ve Test olarak %80-%20 oranında bölündü.
-[3/4] Random Forest Algoritması Eğitiliyor...
-[4/4] Test Verisi Üzerinde Tahminler Yapılıyor...
-
 ========================================
 📊 MODEL BAŞARI RAPORU
 ========================================
@@ -42,43 +45,49 @@ Doğruluk Oranı (Accuracy): %96.50
 
 Detaylı Sınıflandırma Raporu:
               precision    recall  f1-score   support
-
      Ret (0)       0.98      0.95      0.96       112
     Onay (1)       0.94      0.98      0.96        88
-
-    accuracy                           0.96       200
-   macro avg       0.96      0.97      0.96       200
-weighted avg       0.97      0.96      0.96       200
 
 ========================================
 🧑‍💼 YENİ MÜŞTERİ TESTİ (GERÇEK ZAMANLI)
 ========================================
-Müşteri Profili:
- Yas  Aylik_Gelir  Kredi_Miktari  Gecmis_Kredi_Puani
-  25        45000          50000                 710
-
 Sistem Kararı: ONAYLANDI ✅
 ```
 
-*Not: Modelimiz, krediyi geri ödeyemeyecek birine onay vermemek (Precision) üzerine agresif optimize edilebilir.*
-
-## 📂 Proje Dizini
+## 📂 Proje Yapısı
 ```text
-1_Kredi_Risk_Skorlamasi/
-│
-├── train_model.py      # Veri üretimi, model eğitimi ve test scripti
-├── requirements.txt    # Gerekli kütüphaneler (pandas, scikit-learn)
-└── README.md           # Proje dokümantasyonu
+Kredi-Risk-Skorlamasi/
+├── data/                  # Ham ve işlenmiş veri setleri
+├── src/
+│   ├── data_generator.py  # Sentetik veri üretim motoru
+│   └── train_model.py     # Algoritma ve eğitim kodları
+├── models/                # Eğitilmiş model çıktıları (.pkl)
+├── requirements.txt       # Python bağımlılıkları
+└── README.md              # Mimari dokümantasyon
 ```
 
-## 🚀 Kurulum ve Çalıştırma
-Projeyi yerel makinenizde test etmek için aşağıdaki adımları izleyin:
+## 💻 Programatik Kullanım
+Projeyi kendi sisteminize entegre etmek isterseniz:
+```python
+from src.train_model import CreditRiskModel
 
-1.  Gereksinimleri yükleyin:
-    ```bash
-    pip install -r requirements.txt
-    ```
-2.  Modeli çalıştırın:
-    ```bash
-    python train_model.py
-    ```
+model = CreditRiskModel()
+model.train(data_path="data/raw_data.csv")
+
+yeni_musteri = [[25, 45000, 50000, 710]] # Yas, Gelir, Kredi, Puan
+karar = model.predict(yeni_musteri)
+print("ONAY" if karar == 1 else "RED")
+```
+
+## 🚀 Kurulum
+```bash
+git clone https://github.com/Umitsencer/Kredi-Risk-Skorlamasi.git
+pip install -r requirements.txt
+python src/train_model.py
+```
+
+## 📜 Lisans ve İletişim
+Bu proje **MIT Lisansı** ile lisanslanmıştır. Dilediğiniz gibi geliştirebilirsiniz.
+- **Geliştirici:** Ümit SENCER
+- **İletişim:** [LinkedIn Profilim](https://www.linkedin.com/in/umitsencer/)
+```
