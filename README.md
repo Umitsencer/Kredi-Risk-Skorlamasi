@@ -10,8 +10,8 @@ Bir bankanın elindeki geçmiş müşteri verilerini (yaş, gelir, geçmiş kred
 * **Pandas & NumPy** (Veri Analizi)
 * **Scikit-Learn & XGBoost** (Makine Öğrenmesi Algoritmaları)
 
-## 🧠 Öğrenme Serüvenim
-Yapay zeka serüvenime direkt "ChatGPT API'si çekerek" değil, işin temeli olan **Tabular (Tablo) Veri Analizi** ve **İstatistiksel Modeller** ile başladım. Algoritma derslerindeki mantığı gerçek dünya verilerine uygulamak için yazdığım bu proje, Veri Bilimi (Data Science) altyapımı sağlamlaştırdı.
+## 🧠 Mühendislik Yaklaşımı
+Bu çalışma, sadece bir model eğitimi değil; bankacılık sektöründeki **risk yönetimi süreçlerini** optimize etmek amacıyla kurgulanmıştır. Proje kapsamında; sentetik veri üretimi ile gizlilik kurallarına (KVKK) sadık kalınmış, istatistiksel modeller ve **Random Forest** algoritması kullanılarak yüksek doğruluklu bir karar destek mekanizması oluşturulmuştur.
 
 ## 🚀 Nasıl Çalıştırılır?
 ```bash
